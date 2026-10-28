@@ -37,7 +37,7 @@ jobs:
       - name: System dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev
+          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev libssl-dev zlib1g-dev
       - name: Portable toolchain (cmake + clang + ninja + SDL3)
         run: bash psxrecomp/tools/fetch_toolchain.sh --artifact linux-x64
       - name: Configure
