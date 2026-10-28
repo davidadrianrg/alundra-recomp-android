@@ -42,13 +42,13 @@ jobs:
         run: bash psxrecomp/tools/fetch_toolchain.sh --artifact linux-x64
       - name: Configure
         run: |
-          . psxrecomp/.cache/toolchain-pack/env.sh
+          . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
           cmake -S . -B build-ci -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DPSXRECOMP_ROOT="$PWD/psxrecomp" \
             -DPSX_RECOMP_UI=OFF -DPSX_REWIND=OFF
       - name: Build
         run: |
-          . psxrecomp/.cache/toolchain-pack/env.sh
+          . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
           cmake --build build-ci -j"$(nproc)"
 
   android:

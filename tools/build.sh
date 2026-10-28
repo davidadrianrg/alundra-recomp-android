@@ -42,10 +42,12 @@ use_toolchain() {
     if command -v cmake >/dev/null && command -v ninja >/dev/null && command -v clang >/dev/null; then
         return 0
     fi
-    local pack="psxrecomp/.cache/toolchain-pack"
+    local pack="${TOOLCHAIN_DIR:-$ROOT/.cache/toolchain-pack}"
+    [ -f "$pack/env.sh" ] || pack="$ROOT/psxrecomp/.cache/toolchain-pack"
     if [ ! -f "$pack/env.sh" ]; then
         say "downloading portable toolchain (cmake+clang+ninja+SDL3)"
         bash psxrecomp/tools/fetch_toolchain.sh --artifact linux-x64
+        pack="${TOOLCHAIN_DIR:-$ROOT/.cache/toolchain-pack}"
     fi
     # shellcheck disable=SC1091
     . "$pack/env.sh"
