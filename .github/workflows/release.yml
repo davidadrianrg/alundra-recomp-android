@@ -38,7 +38,7 @@ jobs:
           . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
           cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DPSXRECOMP_ROOT="$PWD/psxrecomp" \
-            -DPSX_RECOMP_UI=OFF -DPSX_REWIND=OFF \
+            -DPSX_REWIND=OFF \
             -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON
       - name: Build
         run: |
