@@ -37,7 +37,7 @@ jobs:
       - name: System dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev libssl-dev zlib1g-dev
+          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev zlib1g-dev
       - name: Portable toolchain (cmake + clang + ninja + SDL3)
         run: bash psxrecomp/tools/fetch_toolchain.sh --artifact linux-x64
       - name: Configure
@@ -45,7 +45,8 @@ jobs:
           . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
           cmake -S . -B build-ci -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DPSXRECOMP_ROOT="$PWD/psxrecomp" \
-            -DPSX_RECOMP_UI=OFF -DPSX_REWIND=OFF
+            -DPSX_RECOMP_UI=OFF -DPSX_REWIND=OFF \
+            -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON
       - name: Build
         run: |
           . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
