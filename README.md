@@ -117,18 +117,60 @@ El ejecutable resultante estará en `build-release/Alundra_Recompiled.exe`.
 
 ---
 
+## 🔒 BYOC — Bring Your Own Copy
+
+Este repositorio **no contiene ni distribuye** el juego: ni el programa
+recompilado (`generated/`), ni la BIOS, ni imágenes de disco, ni binarios
+compilados. Todo eso se genera en tu máquina a partir de **tu propia copia
+legal** de Alundra.
+
+¿Qué es `generated/`? La recompilación estática traduce el programa MIPS del
+juego a C: `generated/` es exactamente ese resultado — la tabla de despacho
+(`*_dispatch.c`), las declaraciones y los ~430 ficheros `*_full_*.c` con las
+funciones del juego ya traducidas. Es el juego en forma de código C, así que no
+se publica. Generarlo es un comando:
+
+```bash
+git clone --recursive https://github.com/davidadrianrg/alundra-recomp-android.git
+cd alundra-recomp-android
+tools/build.sh disc --disc /ruta/a/tu/Alundra.cue     # genera generated/
+tools/build.sh android --install                      # APK y lo instala por adb
+tools/build.sh desktop                                # ejecutable de PC
+```
+
+`tools/build.sh disc` acepta `.cue/.bin`, `.iso`, `.img`, `.chd` y `.pbp`, y
+verifica el disco contra los digests conocidos de `game.toml`.
+
+**CI/CD**: el workflow de Release publica solo el *setup host* (un lanzador que
+pide tu disco y compila en local). El APK solo se adjunta si quien publica tiene
+`generated/` en su copia — es decir, tu fork privado con tu disco; ese APK es
+personal e intransferible.
+
+---
+
 ## 📱 Port Android (esta fork)
 
 Esta fork añade la app Android: el mismo código C recompilado se compila para
 **arm64** contra el framework `psxrecomp-android` (submódulo `psxrecomp/`), con
 menú de arranque para elegir tu disco, pad táctil y menú lateral con save states.
 
+**Controles**
+
+- **Táctil**: pad completo en pantalla (D-pad, botones, L1/R1/L2/R2, Start/Select).
+  Se puede **ocultar**: menú → *Controls* → **Touch pad: On/Off**, o control por
+  control desde *Edit pad layout…* (mover, escalar, renombrar, ocultar). La
+  opacidad se ajusta en el mismo menú y el layout se guarda entre partidas.
+- **Mando físico**: cualquier gamepad Bluetooth/USB (Xbox, DualSense, 8BitDo…)
+  funciona por SDL; al detectar entrada de mando el pad táctil **se aparta solo**
+  y vuelve con el siguiente toque. Teclado y mando se pueden usar a la vez.
+
 ```bash
-git clone --recursive https://github.com/davidadrianrg/alundra-recomp-android.git
-cd alundra-recomp-android/android
-./gradlew :app:assembleDebug        # requiere JDK 17, SDK 35 y NDK 28.2.13676358
-./gradlew :app:installDebug         # instala en el móvil por adb
+# desde la raíz del repo (con tu disco a mano):
+tools/build.sh android --disc /ruta/a/tu/Alundra.cue --install
 ```
+
+Equivale a generar `generated/` con `psxrecomp_cli.py generate` y luego
+`cd android && ./gradlew :app:installDebug` (JDK 17, SDK 35, NDK 28.2.13676358).
 
 Detalles en [`android/README.md`](android/README.md).
 

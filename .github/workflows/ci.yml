@@ -1,0 +1,96 @@
+name: CI
+
+# BYOC: this repository carries no game data and no binaries, so CI can only
+# build the *setup host* (the launcher that generates the game from your own
+# disc). The APK job runs only in a checkout that already has generated/ —
+# i.e. your private fork after you ran `tools/build.sh disc` with your copy.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  byoc:
+    name: BYOC guard (no game data committed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tracked files
+        run: python3 tools/ci/check_byoc.py
+
+  desktop:
+    name: Desktop setup host (linux x64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: System dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev
+      - name: Portable toolchain (cmake + clang + ninja + SDL3)
+        run: bash psxrecomp/tools/fetch_toolchain.sh --artifact linux-x64
+      - name: Configure
+        run: |
+          . psxrecomp/.cache/toolchain-pack/env.sh
+          cmake -S . -B build-ci -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DPSXRECOMP_ROOT="$PWD/psxrecomp" \
+            -DPSX_RECOMP_UI=OFF -DPSX_REWIND=OFF
+      - name: Build
+        run: |
+          . psxrecomp/.cache/toolchain-pack/env.sh
+          cmake --build build-ci -j"$(nproc)"
+
+  android:
+    name: Android APK (needs your own generated/ game C)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Is the recompiled game C present?
+        id: gamec
+        run: |
+          if compgen -G "generated/*_dispatch.c" > /dev/null; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No generated/ in this checkout (BYOC): skipping the APK build."
+          fi
+      - name: JDK 17
+        if: steps.gamec.outputs.present == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK
+        if: steps.gamec.outputs.present == 'true'
+        uses: android-actions/setup-android@v3
+      - name: SDK packages (platform 35, NDK 28.2, cmake 3.22.1)
+        if: steps.gamec.outputs.present == 'true'
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" \
+                     "ndk;28.2.13676358" "cmake;3.22.1"
+      - name: Build APK
+        if: steps.gamec.outputs.present == 'true'
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          cd android && ./gradlew --no-daemon :app:assembleDebug
+      - name: Upload APK
+        if: steps.gamec.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: alundra-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

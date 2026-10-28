@@ -102,3 +102,13 @@ starvation_dump.jsonl
 *.apk
 *.aab
 /android/app/.cxx/
+
+# BYOC (bring your own copy): the recompiled game program and every built
+# binary stay OUT of the repository. generated/ is produced locally from YOUR
+# own disc with: tools/build.sh disc   (psxrecomp_cli.py generate).
+/generated/
+*.exe
+*.dll
+*.so
+*.apk
+*.aab
