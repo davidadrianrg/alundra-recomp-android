@@ -4,6 +4,10 @@
 
 ### *Port nativo para PC (Windows x64) mediante ingeniería inversa y recompilación estática*
 
+> **Fork Android** de [aitorcachero/alundra-recomp](https://github.com/aitorcachero/alundra-recomp).
+> Añade una app Android nativa (arm64) con el mismo código recompilado:
+> ver [Port Android](#-port-android-esta-fork). El código de PC se mantiene intacto.
+
 [![Platform](https://img.shields.io/badge/Plataforma-Windows%20x64%20Nativo-blue.svg?style=for-the-badge&logo=windows)](https://github.com)
 [![Resolution](https://img.shields.io/badge/Resoluci%C3%B3n-Nativa%204K%20UHD%20(3840x2160)-brightgreen.svg?style=for-the-badge)](https://github.com)
 [![Framerate](https://img.shields.io/badge/Refresco-120%20%2F%20144%20%2F%20240%20FPS-orange.svg?style=for-the-badge)](https://github.com)
@@ -110,6 +114,31 @@ ninja -C build-release
 ```
 
 El ejecutable resultante estará en `build-release/Alundra_Recompiled.exe`.
+
+---
+
+## 📱 Port Android (esta fork)
+
+Esta fork añade la app Android: el mismo código C recompilado se compila para
+**arm64** contra el framework `psxrecomp-android` (submódulo `psxrecomp/`), con
+menú de arranque para elegir tu disco, pad táctil y menú lateral con save states.
+
+```bash
+git clone --recursive https://github.com/davidadrianrg/alundra-recomp-android.git
+cd alundra-recomp-android/android
+./gradlew :app:assembleDebug        # requiere JDK 17, SDK 35 y NDK 28.2.13676358
+./gradlew :app:installDebug         # instala en el móvil por adb
+```
+
+Detalles en [`android/README.md`](android/README.md).
+
+Diferencias con la versión de PC en esta fork:
+
+- **Render por defecto en Android: software** (camino verificado). El render
+  OpenGL ES está portado pero sin validar en Alundra; el menú permite cambiarlo.
+- En Android no hay wizard de primer arranque, ni recomp-ui, ni rewind, ni Vulkan.
+- El resto de la experiencia de PC (4K, 16:9, interpolación, shaders HD-2D) sigue
+  igual en el target de escritorio.
 
 ---
 

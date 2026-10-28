@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Alundra</string>
+    <!-- Read by the shared psxrecomp Android code (psxrecomp/runtime/android). -->
+    <string name="psx_game_title">Alundra</string>
+    <!-- game.toml [game] id: names the overlay cache folder. -->
+    <string name="psx_game_id">SLES-01258</string>
+</resources>

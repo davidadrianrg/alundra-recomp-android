@@ -1,7 +1,7 @@
 [submodule "psxrecomp"]
 	path = psxrecomp
-	url = G:/Proyectos/decomp-ps1/psxrecomp
-	branch = master
+	url = https://github.com/davidadrianrg/psxrecomp-android.git
+	branch = alundra
 [submodule "recomp-ui"]
 	path = recomp-ui
 	url = https://github.com/RetroPortingToolKit/recomp-ui.git

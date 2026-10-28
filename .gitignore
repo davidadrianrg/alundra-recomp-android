@@ -90,3 +90,15 @@ starvation_dump.jsonl
 !/disc_probe.*.json
 !/disc_set.json
 !/.recomp.json
+
+# Android build (see android/README.md)
+/android/local.properties
+/android/.gradle/
+/android/build/
+/android/app/build/
+/android/app/libs/
+/android/.idea/
+/android/captures/
+*.apk
+*.aab
+/android/app/.cxx/
