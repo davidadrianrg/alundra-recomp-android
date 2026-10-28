@@ -30,17 +30,17 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Android SDK
-        uses: android-actions/setup-android@v3
-      - name: SDK packages (platform 35, NDK 28.2, cmake 3.22.1)
+      - name: Android SDK (el del runner) + paquetes que falten
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" \
-                     "ndk;28.2.13676358" "cmake;3.22.1"
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "sdk.dir=$SDK" > android/local.properties
+          SM="$(ls -d "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
+          [ -n "$SM" ] || { echo "no sdkmanager in $SDK"; exit 1; }
+          yes | "$SM" --licenses > /dev/null || true
+          "$SM" "platforms;android-35" "build-tools;35.0.0" \
+                "ndk;28.2.13676358" "cmake;3.22.1"
       - name: Build APK
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          cd android && ./gradlew --no-daemon :app:assembleDebug
+        run: cd android && ./gradlew --no-daemon :app:assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
