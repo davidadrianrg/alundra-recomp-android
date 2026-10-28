@@ -44,18 +44,23 @@ jobs:
         run: |
           . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
           cmake --build build-release -j"$(nproc)"
-      - name: Stage and package
+      - name: Stage self-compile kit (BYOC)
         run: |
           set -e
           stage="dist/AlundraRecomp-SetupHost-linux-x64"
           mkdir -p "$stage"
-          cp build-release/psx-runtime "$stage/" 2>/dev/null || \
-            cp build-release/AlundraRecomp "$stage/" 2>/dev/null || true
-          for f in game.toml game_options.toml README.md LEEME_INSTRUCCIONES.txt; do
-            [ -f "$f" ] && cp "$f" "$stage/" || true
+          # Tracked files only: no generated/, no disc, no binaries.
+          git archive HEAD | tar -x -C "$stage"
+          for sub in psxrecomp recomp-ui; do
+            mkdir -p "$stage/$sub"
+            git -C "$sub" archive HEAD | tar -x -C "$stage/$sub"
           done
+          cp build-release/Alundra*_Recompiled "$stage/" 2>/dev/null || \
+            cp build-release/AlundraRecomp "$stage/" 2>/dev/null || \
+            cp build-release/psx-runtime "$stage/" 2>/dev/null || true
           [ -d build-release/mods ] && cp -r build-release/mods "$stage/" || true
-          [ -d shaders ] && cp -r shaders "$stage/" || true
+          [ -f build-release/bios/openbios.bin ] && { mkdir -p "$stage/bios"; cp build-release/bios/* "$stage/bios/"; } || true
+          ls -la "$stage" | head -20
           ( cd dist && zip -qr "AlundraRecomp-SetupHost-linux-x64.zip" "$(basename "$stage")" )
           ls -l dist
       - uses: actions/upload-artifact@v4
