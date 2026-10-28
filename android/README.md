@@ -63,11 +63,8 @@ Uso personal y no comercial (PolyForm Noncommercial, igual que `psxrecomp`).
 Necesitas tu propia copia de Alundra. **No distribuyas APKs**: contienen el
 programa traducido del juego.
 
-## BYOC y controles
+## Controles
 
-- El APK **no** lleva el juego: `generated/` se genera antes con
-  `tools/build.sh disc` a partir de tu disco. Sin ese paso `assembleDebug` falla
-  a propósito (el repo no versiona código del juego).
 - **Pad táctil ocultable**: menú → *Controls* → **Touch pad: On/Off**; por control
   individual en *Edit pad layout…*; opacidad ajustable. El layout se guarda.
 - **Mando físico**: gamepads por SDL (Xbox/DualSense/8BitDo/…). Al detectar mando

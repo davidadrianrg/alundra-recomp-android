@@ -117,35 +117,28 @@ El ejecutable resultante estará en `build-release/Alundra_Recompiled.exe`.
 
 ---
 
-## 🔒 BYOC — Bring Your Own Copy
+## 📦 Qué incluye el repo
 
-Este repositorio **no contiene ni distribuye** el juego: ni el programa
-recompilado (`generated/`), ni la BIOS, ni imágenes de disco, ni binarios
-compilados. Todo eso se genera en tu máquina a partir de **tu propia copia
-legal** de Alundra.
+Como el repo original, este repositorio **versiona el código recompilado**
+(`generated/`, el programa de Alundra traducido a C) y los workflows compilan el
+APK desde ahí, sin necesidad de disco.
 
-¿Qué es `generated/`? La recompilación estática traduce el programa MIPS del
-juego a C: `generated/` es exactamente ese resultado — la tabla de despacho
-(`*_dispatch.c`), las declaraciones y los ~430 ficheros `*_full_*.c` con las
-funciones del juego ya traducidas. Es el juego en forma de código C, así que no
-se publica. Generarlo es un comando:
+Lo que **no** incluye ni se distribuye: texturas, audio, FMV, datos de nivel ni
+la BIOS del juego. Todo eso lo lee la app de **tu propia copia**, que le indicas
+al primer arranque y se importa a su almacenamiento privado.
 
 ```bash
 git clone --recursive https://github.com/davidadrianrg/alundra-recomp-android.git
-cd alundra-recomp-android
-tools/build.sh disc --disc /ruta/a/tu/Alundra.cue     # genera generated/
-tools/build.sh android --install                      # APK y lo instala por adb
-tools/build.sh desktop                                # ejecutable de PC
+cd alundra-recomp-android/android
+./gradlew :app:assembleDebug        # JDK 17, SDK 35, NDK 28.2.13676358
+./gradlew :app:installDebug         # instala en el móvil por adb
 ```
 
-`tools/build.sh disc` acepta `.cue/.bin`, `.iso`, `.img`, `.chd` y `.pbp`, y
-verifica el disco contra los digests conocidos de `game.toml`.
+O desde la raíz: `tools/build.sh android --install` (y `tools/build.sh disc` solo
+si quieres regenerar `generated/` desde tu disco).
 
-**CI/CD**: el proyecto es solo Android y el workflow de Release publica **el
-APK** en Lanzamientos. Como el APK lleva dentro el programa del juego, solo se
-construye donde exista `generated/`: tu **fork privado** con tu disco
-(`tools/build.sh disc` → `git add -f generated` → tag). En este repo público el
-workflow termina en verde con un aviso y no publica nada.
+**Releases**: al empujar un tag `v*`, el workflow `Release (Android APK)` compila
+el APK y lo publica en Lanzamientos como `Alundra-android-arm64-<tag>.apk`.
 
 ---
 

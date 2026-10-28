@@ -1,10 +1,8 @@
 name: CI
 
-# Alcance del proyecto: Android.
-#
-# BYOC: este repositorio no lleva el juego, así que el APK solo se puede
-# compilar donde exista `generated/` (tu fork privado con tu disco). Aquí el
-# guard BYOC vigila que no se cuele código del juego ni binarios.
+# Compila el APK Android en cada push a main y en cada PR, y lo deja como
+# artefacto descargable. El codigo recompilado (generated/) esta versionado,
+# igual que en el repo original, asi que no hace falta disco para compilar.
 
 on:
   push:
@@ -20,52 +18,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  byoc:
-    name: BYOC guard (sin datos del juego)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Comprobar ficheros versionados
-        run: python3 tools/ci/check_byoc.py
-
-  android:
-    name: APK arm64 (solo con tu generated/)
+  apk:
+    name: APK arm64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: ¿Hay generated/?
-        id: gamec
-        run: |
-          if compgen -G "generated/*_dispatch.c" > /dev/null; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=BYOC::Sin generated/ en este checkout: no hay APK que construir aquí (ver README)."
-          fi
       - name: JDK 17
-        if: steps.gamec.outputs.present == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
       - name: Android SDK
-        if: steps.gamec.outputs.present == 'true'
         uses: android-actions/setup-android@v3
       - name: SDK packages (platform 35, NDK 28.2, cmake 3.22.1)
-        if: steps.gamec.outputs.present == 'true'
         run: |
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0" \
                      "ndk;28.2.13676358" "cmake;3.22.1"
       - name: Build APK
-        if: steps.gamec.outputs.present == 'true'
         run: |
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           cd android && ./gradlew --no-daemon :app:assembleDebug
       - name: Upload APK
-        if: steps.gamec.outputs.present == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: alundra-android-debug

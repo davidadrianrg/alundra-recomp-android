@@ -1,17 +1,8 @@
 name: Release (Android APK)
 
-# Publica el APK en Lanzamientos, y solo el APK.
-#
-# BYOC: el APK lleva dentro el programa del juego ya traducido, así que solo se
-# puede construir donde exista `generated/` — es decir, en TU fork privado
-# después de generarlo con tu disco:
-#
-#   tools/build.sh disc --disc <tu disco>     # crea generated/
-#   git add -f generated && git commit && git push
-#   git tag v0.1.0 && git push --tags
-#
-# En este repositorio público no hay `generated/`: el workflow termina en verde
-# con un aviso y NO publica nada (no hay APK que publicar aquí).
+# Publica el APK Android en Lanzamientos al empujar un tag v*.
+# Mismo patron que el repo original: el codigo recompilado va versionado, el
+# workflow compila el APK y lo adjunta al release.
 
 on:
   push:
@@ -26,29 +17,8 @@ permissions:
   contents: write
 
 jobs:
-  detect:
-    name: ¿Hay generated/ en este checkout?
-    runs-on: ubuntu-latest
-    outputs:
-      apk: ${{ steps.detect.outputs.apk }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - id: detect
-        run: |
-          if compgen -G "generated/*_dispatch.c" > /dev/null; then
-            echo "apk=true" >> "$GITHUB_OUTPUT"
-            echo "generated/ presente: se construye el APK."
-          else
-            echo "apk=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=BYOC::Sin generated/ en este checkout. Nada que publicar: genera el tuyo con tools/build.sh disc en un fork privado."
-          fi
-
   apk:
     name: Build APK (arm64) + Release
-    needs: detect
-    if: needs.detect.outputs.apk == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,9 +55,10 @@ jobs:
           body: |
             ## Alundra — Android (arm64)
 
-            APK generado a partir de una copia propia del juego (BYOC). Contiene
-            el programa recompilado, así que es **personal e intransferible**:
-            no lo redistribuyas.
+            APK nativo del port: recompilación estática del programa de PS1 a C,
+            compilada para arm64. **No incluye** texturas, audio, FMV ni datos de
+            nivel: la app lee todo eso de tu propia copia del juego, que le
+            indicas al primer arranque.
 
             **Instalar**: copia el `.apk` al móvil (o `adb install -r`) y abre la
             app → menú lateral → *Select game file* → tu `.cue`/`.bin` → **Play**.
@@ -95,6 +66,9 @@ jobs:
             **Controles**: pad táctil (menú → *Controls* → `Touch pad: On/Off`,
             opacidad y disposición editables) y mandos Bluetooth/USB por SDL, que
             apartan el pad automáticamente.
+
+            **Requisitos**: Android 5+ (arm64), tu copia legal de Alundra
+            (SLES-01258 u otra región soportada).
 
             Uso no comercial (PolyForm Noncommercial 1.0.0).
           files: Alundra-android-arm64-*.apk
