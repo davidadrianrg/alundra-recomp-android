@@ -31,6 +31,9 @@ if(ANDROID)
     add_link_options(-Wl,-Bsymbolic)
     set(PSX_REWIND OFF CACHE BOOL "Android: no rewind snap-ring backend" FORCE)
     set(PSX_RECOMP_UI OFF CACHE BOOL "Android: no desktop launcher UI" FORCE)
+    # Con el submódulo recomp-ui presente, main.cpp ve su cabecera por
+    # __has_include y llamaría a un provider que en Android no se compila.
+    add_compile_options(-DPSX_NO_RECOMP_UI_PROVIDER=1)
     set(PSX_ENABLE_VULKAN OFF CACHE BOOL "Android: no Vulkan renderer" FORCE)
     set(PSX_SETUP_WIZARD OFF CACHE BOOL "Android: the start menu picks the disc" FORCE)
     set(PSX_PRELOADED_MODS "NONE")
