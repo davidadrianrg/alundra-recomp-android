@@ -141,10 +141,11 @@ tools/build.sh desktop                                # ejecutable de PC
 `tools/build.sh disc` acepta `.cue/.bin`, `.iso`, `.img`, `.chd` y `.pbp`, y
 verifica el disco contra los digests conocidos de `game.toml`.
 
-**CI/CD**: el workflow de Release publica solo el *setup host* (un lanzador que
-pide tu disco y compila en local). El APK solo se adjunta si quien publica tiene
-`generated/` en su copia — es decir, tu fork privado con tu disco; ese APK es
-personal e intransferible.
+**CI/CD**: el proyecto es solo Android y el workflow de Release publica **el
+APK** en Lanzamientos. Como el APK lleva dentro el programa del juego, solo se
+construye donde exista `generated/`: tu **fork privado** con tu disco
+(`tools/build.sh disc` → `git add -f generated` → tag). En este repo público el
+workflow termina en verde con un aviso y no publica nada.
 
 ---
 

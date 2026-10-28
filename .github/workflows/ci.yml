@@ -1,9 +1,10 @@
 name: CI
 
-# BYOC: this repository carries no game data and no binaries, so CI can only
-# build the *setup host* (the launcher that generates the game from your own
-# disc). The APK job runs only in a checkout that already has generated/ —
-# i.e. your private fork after you ran `tools/build.sh disc` with your copy.
+# Alcance del proyecto: Android.
+#
+# BYOC: este repositorio no lleva el juego, así que el APK solo se puede
+# compilar donde exista `generated/` (tu fork privado con tu disco). Aquí el
+# guard BYOC vigila que no se cuele código del juego ni binarios.
 
 on:
   push:
@@ -20,53 +21,28 @@ concurrency:
 
 jobs:
   byoc:
-    name: BYOC guard (no game data committed)
+    name: BYOC guard (sin datos del juego)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check tracked files
+      - name: Comprobar ficheros versionados
         run: python3 tools/ci/check_byoc.py
 
-  desktop:
-    name: Desktop setup host (linux x64)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: System dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev zlib1g-dev
-      - name: Portable toolchain (cmake + clang + ninja + SDL3)
-        run: bash psxrecomp/tools/fetch_toolchain.sh --artifact linux-x64
-      - name: Configure
-        run: |
-          . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
-          cmake -S . -B build-ci -G Ninja -DCMAKE_BUILD_TYPE=Release \
-            -DPSXRECOMP_ROOT="$PWD/psxrecomp" \
-            -DPSX_REWIND=OFF \
-            -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON
-      - name: Build
-        run: |
-          . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
-          cmake --build build-ci -j"$(nproc)"
-
   android:
-    name: Android APK (needs your own generated/ game C)
+    name: APK arm64 (solo con tu generated/)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Is the recompiled game C present?
+      - name: ¿Hay generated/?
         id: gamec
         run: |
           if compgen -G "generated/*_dispatch.c" > /dev/null; then
             echo "present=true" >> "$GITHUB_OUTPUT"
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No generated/ in this checkout (BYOC): skipping the APK build."
+            echo "::notice title=BYOC::Sin generated/ en este checkout: no hay APK que construir aquí (ver README)."
           fi
       - name: JDK 17
         if: steps.gamec.outputs.present == 'true'

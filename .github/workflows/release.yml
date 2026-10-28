@@ -1,11 +1,17 @@
-name: Release
+name: Release (Android APK)
 
-# Publishes the BYOC artifact: a setup host that generates the game from the
-# player's own disc (no game code, no BIOS, no disc images in the asset).
+# Publica el APK en Lanzamientos, y solo el APK.
 #
-# The APK is attached only when the ref being released already contains
-# generated/ — that means a private fork built from your own copy, never this
-# public repository.
+# BYOC: el APK lleva dentro el programa del juego ya traducido, así que solo se
+# puede construir donde exista `generated/` — es decir, en TU fork privado
+# después de generarlo con tu disco:
+#
+#   tools/build.sh disc --disc <tu disco>     # crea generated/
+#   git add -f generated && git commit && git push
+#   git tag v0.1.0 && git push --tags
+#
+# En este repositorio público no hay `generated/`: el workflow termina en verde
+# con un aviso y NO publica nada (no hay APK que publicar aquí).
 
 on:
   push:
@@ -13,137 +19,83 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to publish (created if it does not exist)'
+        description: 'Tag a publicar (se crea si no existe)'
         required: true
 
 permissions:
   contents: write
 
 jobs:
-  desktop-setup-host:
-    name: Build setup host (linux x64)
+  detect:
+    name: ¿Hay generated/ en este checkout?
     runs-on: ubuntu-latest
+    outputs:
+      apk: ${{ steps.detect.outputs.apk }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: System dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ninja-build libgl1-mesa-dev zlib1g-dev
-      - name: Portable toolchain
-        run: bash psxrecomp/tools/fetch_toolchain.sh --artifact linux-x64
-      - name: Configure (no game C -> setup host)
-        run: |
-          . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
-          cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release \
-            -DPSXRECOMP_ROOT="$PWD/psxrecomp" \
-            -DPSX_REWIND=OFF \
-            -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON
-      - name: Build
-        run: |
-          . "${TOOLCHAIN_DIR:-$PWD/.cache/toolchain-pack}/env.sh"
-          cmake --build build-release -j"$(nproc)"
-      - name: Stage self-compile kit (BYOC)
-        run: |
-          set -e
-          stage="dist/AlundraRecomp-SetupHost-linux-x64"
-          mkdir -p "$stage"
-          # Tracked files only: no generated/, no disc, no binaries.
-          git archive HEAD | tar -x -C "$stage"
-          for sub in psxrecomp recomp-ui; do
-            mkdir -p "$stage/$sub"
-            git -C "$sub" archive HEAD | tar -x -C "$stage/$sub"
-          done
-          cp build-release/Alundra*_Recompiled "$stage/" 2>/dev/null || \
-            cp build-release/AlundraRecomp "$stage/" 2>/dev/null || \
-            cp build-release/psx-runtime "$stage/" 2>/dev/null || true
-          [ -d build-release/mods ] && cp -r build-release/mods "$stage/" || true
-          [ -f build-release/bios/openbios.bin ] && { mkdir -p "$stage/bios"; cp build-release/bios/* "$stage/bios/"; } || true
-          ls -la "$stage" | head -20
-          ( cd dist && zip -qr "AlundraRecomp-SetupHost-linux-x64.zip" "$(basename "$stage")" )
-          ls -l dist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: setup-host-linux
-          path: dist/*.zip
-          if-no-files-found: error
-
-  android-apk:
-    name: Build APK (only with your own generated/ game C)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Is the recompiled game C present?
-        id: gamec
+      - id: detect
         run: |
           if compgen -G "generated/*_dispatch.c" > /dev/null; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "apk=true" >> "$GITHUB_OUTPUT"
+            echo "generated/ presente: se construye el APK."
           else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Public BYOC checkout: no generated/ -> no APK asset."
+            echo "apk=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=BYOC::Sin generated/ en este checkout. Nada que publicar: genera el tuyo con tools/build.sh disc en un fork privado."
           fi
-      - uses: actions/setup-java@v4
-        if: steps.gamec.outputs.present == 'true'
+
+  apk:
+    name: Build APK (arm64) + Release
+    needs: detect
+    if: needs.detect.outputs.apk == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-        if: steps.gamec.outputs.present == 'true'
-      - name: SDK packages
-        if: steps.gamec.outputs.present == 'true'
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+      - name: SDK packages (platform 35, NDK 28.2, cmake 3.22.1)
         run: |
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0" \
                      "ndk;28.2.13676358" "cmake;3.22.1"
       - name: Build APK
-        if: steps.gamec.outputs.present == 'true'
         run: |
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          cd android && ./gradlew --no-daemon :app:assembleDebug
-      - uses: actions/upload-artifact@v4
-        if: steps.gamec.outputs.present == 'true'
-        with:
-          name: apk-arm64
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-
-  publish:
-    name: Publish GitHub Release
-    needs: [desktop-setup-host]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          path: assets
-      - name: Flatten assets
+          cd android && ./gradlew --no-daemon :app:assembleDebug -PpsxPlayBuild
+      - name: Rename for the release
         run: |
-          mkdir -p out
-          find assets -type f \( -name '*.zip' -o -name '*.apk' \) -exec cp {} out/ \;
-          ls -l out
-      - name: Create or update the release
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             "Alundra-android-arm64-${tag}.apk"
+          ls -lh Alundra-android-arm64-*.apk
+      - name: Publicar en Lanzamientos
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: ${{ github.event.inputs.tag || github.ref_name }}
-          draft: false
+          name: Alundra Android ${{ github.event.inputs.tag || github.ref_name }}
           generate_release_notes: true
           body: |
-            ## Bring your own copy (BYOC)
+            ## Alundra — Android (arm64)
 
-            These assets contain **no game code, no BIOS and no disc image**. The
-            setup host asks for your own legal Alundra disc, generates the
-            recompiled C on your machine with the bundled psxrecomp SDK, and
-            builds the executable — everything happens locally.
+            APK generado a partir de una copia propia del juego (BYOC). Contiene
+            el programa recompilado, así que es **personal e intransferible**:
+            no lo redistribuyas.
 
-            - **Setup host (PC)**: unzip, run it, pick your `.cue`/`.bin`.
-            - **APK (if attached)**: built from the releaser's own copy; it is
-              personal and non-transferable. Build your own with
-              `tools/build.sh android --disc <your disc>`.
+            **Instalar**: copia el `.apk` al móvil (o `adb install -r`) y abre la
+            app → menú lateral → *Select game file* → tu `.cue`/`.bin` → **Play**.
 
-            Non-commercial use only (PolyForm Noncommercial 1.0.0).
-          files: out/*
+            **Controles**: pad táctil (menú → *Controls* → `Touch pad: On/Off`,
+            opacidad y disposición editables) y mandos Bluetooth/USB por SDL, que
+            apartan el pad automáticamente.
+
+            Uso no comercial (PolyForm Noncommercial 1.0.0).
+          files: Alundra-android-arm64-*.apk
           fail_on_unmatched_files: true
