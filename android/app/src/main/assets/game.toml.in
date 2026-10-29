@@ -47,7 +47,7 @@ vsync = "off"
 # Canvas panorámico nativo para 2D: el motor amplía el área de juego en vez de
 # estirar los píxeles (el "16:9 sin deformar" del port de PC).
 [widescreen]
-native_wide = true
+native_wide = false
 full_2d = true
 auto_ui_squash = false
 
