@@ -13,8 +13,8 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 1
-        versionName "0.1.0"
+        versionCode 2
+        versionName "0.2.0"
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_static"
@@ -31,6 +31,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Build de juego (-O3 + LTO, sin servidor de debug) instalable: se
+            // firma con la debug keystore local (no se versiona nada). Para
+            // distribuir en tienda haría falta una keystore propia.
+            signingConfig signingConfigs.debug
         }
     }
     applicationVariants.all { variant ->

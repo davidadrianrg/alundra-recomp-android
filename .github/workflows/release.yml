@@ -39,11 +39,11 @@ jobs:
           "$SM" "platforms;android-35" "build-tools;35.0.0" \
                 "ndk;28.2.13676358" "cmake;3.22.1"
       - name: Build APK
-        run: cd android && ./gradlew --no-daemon :app:assembleDebug -PpsxPlayBuild
+        run: cd android && ./gradlew --no-daemon :app:assembleRelease
       - name: Rename for the release
         run: |
           tag="${{ github.event.inputs.tag || github.ref_name }}"
-          cp android/app/build/outputs/apk/debug/app-debug.apk \
+          cp android/app/build/outputs/apk/release/app-release.apk \
              "Alundra-android-arm64-${tag}.apk"
           ls -lh Alundra-android-arm64-*.apk
       - name: Publicar en Lanzamientos

@@ -18,10 +18,44 @@ seeds = "seeds/ghidra_funcs.txt"
 out_dir = "generated"
 strict = true
 
+# --- Vídeo -------------------------------------------------------------------
+# "software" es el camino seguro; el menú (Display → Renderer → GPU) escribe
+# "opengl" aquí y reinicia para usar OpenGL ES, que es donde se aplican de
+# verdad resolución interna, filtros y antialiasing.
+#
+# Renderer = software: escala por CPU; internal_resolution/supersample/FXAA se
+# ignoran (el juego se dibuja a resolución nativa y se presenta escalado).
+# Renderer = opengl : todo lo de abajo actúa.
 [video]
-# Software renderer: the verified path on Android. The menu's Renderer choice
-# writes "opengl" here (OpenGL ES, experimental).
 renderer = "software"
+internal_resolution = "720p"
+supersample = 1.0
+resolution_reference_lines = 240
+antialiasing_mode = "off"       # off | fxaa | fxaa_hq
+texture_filtering = "nearest"   # nearest | bilinear | xbr  (xbr = pixel art suavizado)
+texture_lod = "mipmap"
+anisotropic_filtering = 4
+dithering = "off"               # off | on | fine
+bloom = 0.0                     # 0.0 .. 2.0 (solo OpenGL)
+accurate_blending = true
+fmv_chroma_smoothing = true
+fmv_filter = "bilinear"         # nearest | bilinear | sharp | bicubic
+aspect_ratio = "16:9"
+vsync = "off"
+
+# Canvas panorámico nativo para 2D: el motor amplía el área de juego en vez de
+# estirar los píxeles (el "16:9 sin deformar" del port de PC).
+[widescreen]
+native_wide = false
+full_2d = true
+auto_ui_squash = false
+
+# --- Audio -------------------------------------------------------------------
+# buffer_ms alto = más latencia y menos cortes. En móvil 120 ms va fino; spu_hq
+# (mezcla HQ por CPU) apagado libera CPU para el render.
+[audio]
+buffer_ms = 120
+spu_hq = false
 
 [runtime]
 overlay_cache = true

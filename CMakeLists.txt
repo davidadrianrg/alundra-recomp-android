@@ -14,13 +14,10 @@ project(AlundraRecomp LANGUAGES C CXX)
 
 # --- Android build (the port this fork exists for) --------------------------
 if(ANDROID)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        # Keep the debug APK debuggable while optimizing the CPU-bound PS1
-        # runtime: the Android debug variant otherwise compiles the emulator at
-        # -O0, which is unusable on a phone.
-        add_compile_options(-O3 -flto=thin)
-        add_link_options(-flto=thin)
-    endif()
+    # The PS1 runtime is CPU-bound: never ship an -O0 build. Applies to every
+    # variant (Debug included: AGP passes -O0 for the Android debug build).
+    add_compile_options(-O3 -flto=thin)
+    add_link_options(-flto=thin)
     # libmain.so is the whole game; nothing interposes its symbols. Hidden
     # visibility lets the compiler address runtime globals PC-relative instead
     # of loading each address from the GOT (the per-instruction cycle helpers
