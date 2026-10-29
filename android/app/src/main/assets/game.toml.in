@@ -32,6 +32,7 @@ internal_resolution = "720p"
 supersample = 1.0
 resolution_reference_lines = 240
 antialiasing_mode = "off"       # off | fxaa | fxaa_hq
+supersampling = 1               # 1..4 (menu "Internal resolution"); >1 cuesta GPU
 texture_filtering = "nearest"   # nearest | bilinear | xbr  (xbr = pixel art suavizado)
 texture_lod = "mipmap"
 anisotropic_filtering = 4
@@ -54,7 +55,7 @@ auto_ui_squash = false
 # buffer_ms alto = más latencia y menos cortes. En móvil 120 ms va fino; spu_hq
 # (mezcla HQ por CPU) apagado libera CPU para el render.
 [audio]
-buffer_ms = 120
+buffer_ms = 200
 spu_hq = false
 
 [runtime]
