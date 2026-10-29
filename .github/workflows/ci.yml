@@ -39,7 +39,15 @@ jobs:
           yes | "$SM" --licenses > /dev/null || true
           "$SM" "platforms;android-35" "build-tools;35.0.0" \
                 "ndk;28.2.13676358" "cmake;3.22.1"
+      - name: Keystore de release (firma estable)
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
       - name: Build APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: cd android && ./gradlew --no-daemon :app:assembleRelease
       - name: Upload APK
         uses: actions/upload-artifact@v4
