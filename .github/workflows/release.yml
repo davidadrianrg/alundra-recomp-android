@@ -1,4 +1,4 @@
-name: Release (Android APK)
+name: Release (Android APK, borrador)
 
 # Publica el APK Android en Lanzamientos al empujar un tag v*.
 # Mismo patron que el repo original: el codigo recompilado va versionado, el
@@ -60,6 +60,8 @@ jobs:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: Alundra Android ${{ github.event.inputs.tag || github.ref_name }}
           generate_release_notes: true
+          # Borrador por defecto: invisible al publico hasta que se publique a mano.
+          draft: true
           body: |
             ## Alundra — Android (arm64)
 
