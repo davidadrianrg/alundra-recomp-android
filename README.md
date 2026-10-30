@@ -5,8 +5,39 @@
 ### *Port nativo para PC (Windows x64) mediante ingeniería inversa y recompilación estática*
 
 > **Fork Android** de [aitorcachero/alundra-recomp](https://github.com/aitorcachero/alundra-recomp).
-> Añade una app Android nativa (arm64) con el mismo código recompilado:
-> ver [Port Android](#-port-android-esta-fork). El código de PC se mantiene intacto.
+> Añade una app Android nativa (arm64) con el mismo código recompilado.
+> El código de PC se mantiene intacto.
+
+## 📱 Port Android — v1.0.0
+
+APK **arm64-v8a** con el juego recompilado (no es un emulador: el código del
+juego se traduce a C y se compila nativo). **No incluye el juego**: al abrir la
+app eliges tu propia copia (`.cue` + `.bin`, `.iso` o `.chd`).
+
+**Qué hace**
+
+- Renderer **GPU (OpenGL ES)** o software, resolución interna **1×–4×**,
+  filtros de textura **nearest / bilinear / xBR** y antialiasing **en caliente**.
+- **Aspecto**: 4:3 original o **16:9 estirado** (relleno de pantalla).
+- Save states, discos múltiples, arranque rápido (fast boot), pad táctil
+  configurable y mandos Bluetooth/USB.
+- Ajustes de imagen y del pad desde el menú del propio juego.
+
+**Limitaciones conocidas (v1.0.0)**
+
+- **No hay 16:9 real** (lienzo ampliado). Alundra es 2D y solo redibuja el mapa
+  de la ventana 4:3: al ampliar el lienzo los márgenes se quedaban con tiles
+  viejos. Por eso la 1.0 solo ofrece 4:3 o 16:9 estirado.
+- **Renderer** y **perspective-correct textures** requieren reiniciar el juego;
+  el resto de ajustes de imagen se aplican al momento.
+- Sin **mods**, **netplay**, **rewind** ni interpolación de frames (el runtime
+  Android los compila fuera).
+- **Audio**: si el móvil no sostiene la tasa objetivo, el resampler sigue la
+  velocidad real (el tono baja un poco) en vez de crujir.
+- El rendimiento depende del dispositivo; en un SoC de gama media 2024 va a
+  ~50–60 fps con resolución interna 2×.
+- Sin BIOS incluida (OpenBIOS por defecto). La región/velocidad (PAL/NTSC) la
+  fija el disco y el BIOS, no la app.
 
 [![Platform](https://img.shields.io/badge/Plataforma-Windows%20x64%20Nativo-blue.svg?style=for-the-badge&logo=windows)](https://github.com)
 [![Resolution](https://img.shields.io/badge/Resoluci%C3%B3n-Nativa%204K%20UHD%20(3840x2160)-brightgreen.svg?style=for-the-badge)](https://github.com)

@@ -27,12 +27,12 @@ strict = true
 # ignoran (el juego se dibuja a resolución nativa y se presenta escalado).
 # Renderer = opengl : todo lo de abajo actúa.
 [video]
-renderer = "software"
+renderer = "opengl"
 internal_resolution = "720p"
 supersample = 1.0
 resolution_reference_lines = 240
 antialiasing_mode = "off"       # off | fxaa | fxaa_hq
-supersampling = 1               # 1..4 (menu "Internal resolution"); >1 cuesta GPU
+supersampling = 2               # 1..4 (menu "Internal resolution"); >1 cuesta GPU
 texture_filtering = "nearest"   # nearest | bilinear | xbr  (xbr = pixel art suavizado)
 texture_lod = "mipmap"
 anisotropic_filtering = 4
@@ -41,7 +41,7 @@ bloom = 0.0                     # 0.0 .. 2.0 (solo OpenGL)
 accurate_blending = true
 fmv_chroma_smoothing = true
 fmv_filter = "bilinear"         # nearest | bilinear | sharp | bicubic
-aspect_ratio = "16:9"
+aspect_ratio = "4:3"
 vsync = "off"
 
 # Canvas panorámico nativo para 2D: el motor amplía el área de juego en vez de
