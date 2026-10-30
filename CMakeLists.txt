@@ -26,6 +26,11 @@ if(ANDROID)
     add_compile_options(-fno-semantic-interposition -fvisibility=hidden
                         $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>)
     add_link_options(-Wl,-Bsymbolic)
+    # Gradle builds the release APK as RelWithDebInfo, and PSX_DEBUG_TOOLS
+    # defaults ON for anything but Release: the TCP debug server, the heartbeat
+    # and the per-block recording would ship inside the phone build. The PS1
+    # runtime is CPU-bound and those hooks run per block/instruction.
+    set(PSX_DEBUG_TOOLS OFF CACHE BOOL "Android: no TCP debug server" FORCE)
     set(PSX_REWIND OFF CACHE BOOL "Android: no rewind snap-ring backend" FORCE)
     set(PSX_RECOMP_UI OFF CACHE BOOL "Android: no desktop launcher UI" FORCE)
     # Con el submódulo recomp-ui presente, main.cpp ve su cabecera por
